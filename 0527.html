@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>皮克敏森林科學教室：ROV 探險與浮力實驗室</title>
+    <!-- 引入可愛手作感的 Google 網頁字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基礎卡通風格樣式定義 */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            outline: none;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Kiwi Maru', 'Microsoft JhengHei', sans-serif;
+            background-color: #83c656;
+            color: #2c1a04;
+            overflow: hidden;
+        }
+
+        /* 遊戲大容器 */
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 30%, #cbe98c 0%, #83c656 75%, #46841e 100%);
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #2c1a04; /* 卡通黑木框 */
+        }
+
+        /* 頂部標題列 */
+        .header-bar {
+            width: 100%;
+            padding: 12px 20px;
+            background: #fffdf0;
+            border-bottom: 6px solid #2c1a04;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .title-logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-logo span {
+            background: #ffe082;
+            padding: 4px 12px;
+            border: 3px solid #2c1a04;
+            border-radius: 12px;
+            box-shadow: 3px 3px 0px #2c1a04;
+        }
+
+        /* 導覽分頁按鈕群 (Tabs) */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            background: #fff;
+            border: 3px solid #2c1a04;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #2c1a04;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #2c1a04;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 3px 5px 0px #2c1a04;
+        }
+
+        .tab-btn.active {
+            background: #ffd54f; /* 啟用時黃色亮起 */
+            transform: translateY(2px);
+            box-shadow: 1px 1px 0px #2c1a04;
+        }
+
+        /* 主內容顯示區域 */
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* 分頁容器預設隱藏 */
+        .tab-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            max-width: 1000px;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* 通用卡通面板樣式 */
+        .cartoon-panel {
+            background: #fffdf0;
+            border: 4px solid #2c1a04;
+            border-radius: 20px;
+            box-shadow: 6px 6px 0px #2c1a04;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* ==========================================
+           分頁一：ROV 方格遊戲樣式
+           ========================================== */
+        .game-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+        }
+
+        /* 6x6 卡通方格地圖 */
+        .forest-grid {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            width: 340px;
+            height: 340px;
+            background: #a9dfbf;
+            border: 6px solid #2c1a04;
+            border-radius: 20px;
+            box-shadow: 8px 8px 0px rgba(44, 26, 4, 0.25);
+            overflow: hidden;
+        }
+
+        /* 方格線與交錯色 */
+        .grid-cell {
+            border: 1.5px dashed rgba(44, 26, 4, 0.12);
+        }
+        .grid-cell:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .rov-robot {
+            grid-column: 1;
+            grid-row: 1;
+            width: 100%;
+            height: 100%;
+            padding: 4px;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fruit-target {
+            grid-column: 4;
+            grid-row: 3;
+            width: 100%;
+            height: 100%;
+            padding: 4px;
+            z-index: 8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fruit-bounce 1s infinite alternate ease-in-out;
+        }
+
+        @keyframes fruit-bounce {
+            0% { transform: scale(0.85) translateY(2px); }
+            100% { transform: scale(1.05) translateY(-4px); }
+        }
+
+        /* 虛擬方向鍵 */
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 6px;
+            width: 150px;
+            margin-top: 5px;
+        }
+
+        .d-btn {
+            background: #fff;
+            border: 3px solid #2c1a04;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c1a04;
+            height: 40px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #2c1a04;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.1s;
+        }
+
+        .d-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #2c1a04;
+        }
+
+        .btn-up { grid-column: 2; grid-row: 1; background: #e0f2f1; }
+        .btn-left { grid-column: 1; grid-row: 2; background: #e8f5e9; }
+        .btn-down { grid-column: 2; grid-row: 2; background: #e0f2f1; }
+        .btn-right { grid-column: 3; grid-row: 2; background: #e8f5e9; }
+
+        /* 卡通爆炸碎片 */
+        .sparkle-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #2c1a04;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           分頁二：浮力實驗室樣式
+           ========================================== */
+        .lab-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* 實驗水缸 */
+        .water-tank-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .water-tank {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(to bottom, #e0f7fa 0%, #80deea 100%);
+            border: 6px solid #2c1a04;
+            border-radius: 24px;
+            box-shadow: inset 0 20px 40px rgba(255,255,255,0.4), 8px 8px 0px #2c1a04;
+            overflow: hidden;
+        }
+
+        /* 水缸內氣泡 */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: rise 4s infinite ease-in;
+            bottom: -20px;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-380px) scale(1.2); opacity: 0; }
+        }
+
+        /* 水缸中的 ROV 模擬車體 */
+        .lab-rov {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            left: calc(50% - 55px);
+            bottom: 120px; /* 會隨注水量動態變化 */
+            transition: bottom 1s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 5;
+        }
+
+        /* ROV 浮力與重力受力箭頭 */
+        .force-arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            border-radius: 6px;
+            border: 2px solid #2c1a04;
+            transition: height 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 向上浮力箭頭 (綠色) */
+        .arrow-buoyancy {
+            bottom: 100px;
+            background-color: #4caf50;
+            height: 60px; /* 長度固定(理想浮力) */
+            transform-origin: bottom center;
+        }
+        .arrow-buoyancy::before {
+            content: '▲';
+            color: #2c1a04;
+            font-size: 10px;
+            position: absolute;
+            top: -12px;
+        }
+
+        /* 向下重力箭頭 (紅色) */
+        .arrow-gravity {
+            top: 100px;
+            background-color: #f44336;
+            height: 40px; /* 長度隨壓載艙注水變長 */
+            transform-origin: top center;
+        }
+        .arrow-gravity::before {
+            content: '▼';
+            color: #2c1a04;
+            font-size: 10px;
+            position: absolute;
+            bottom: -12px;
+        }
+
+        .force-text {
+            position: absolute;
+            background: #fffdf0;
+            border: 2px solid #2c1a04;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .control-panel h3 {
+            margin: 0 0 10px 0;
+            border-bottom: 3px solid #2c1a04;
+            padding-bottom: 5px;
+        }
+
+        /* 可愛科學滑桿 */
+        .slider-group {
+            background: #f0f4c3;
+            border: 3px solid #2c1a04;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ballast-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: #fff;
+            border: 3px solid #2c1a04;
+            outline: none;
+        }
+
+        .ballast-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffc107;
+            border: 3px solid #2c1a04;
+            cursor: pointer;
+            box-shadow: 0 2px 0px #2c1a04;
+        }
+
+        .status-display {
+            font-size: 1rem;
+            font-weight: bold;
+            background: #fff;
+            border: 2px solid #2c1a04;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* ==========================================
+           分頁三：植物百科樣式
+           ========================================== */
+        .plant-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .plant-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .plant-card {
+            display: flex;
+            background: #fffdf0;
+            border: 4px solid #2c1a04;
+            border-radius: 16px;
+            box-shadow: 4px 4px 0px #2c1a04;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plant-card:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 6px 6px 0px #2c1a04;
+        }
+
+        .plant-img-box {
+            width: 100px;
+            background: #e8f5e9;
+            border-right: 4px solid #2c1a04;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .plant-info-box {
+            flex-grow: 1;
+            padding: 12px;
+        }
+
+        .plant-info-box h3 {
+            margin: 0 0 6px 0;
+            font-size: 1.15rem;
+            color: #2e7d32;
+        }
+
+        .plant-info-box p {
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #5d4037;
+        }
+
+        /* 植物彈出詳細視窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 26, 4, 0.6);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .plant-modal {
+            max-width: 500px;
+            width: 100%;
+            background: #fffdf0;
+            border: 6px solid #2c1a04;
+            border-radius: 24px;
+            box-shadow: 10px 10px 0px #2c1a04;
+            padding: 25px;
+            position: relative;
+            text-align: center;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: #ff8a80;
+            border: 3px solid #2c1a04;
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #2c1a04;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .close-modal-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #2c1a04;
+        }
+
+        /* ==========================================
+           分頁四：評量測驗樣式
+           ========================================== */
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        .quiz-progress-bar {
+            width: 100%;
+            height: 16px;
+            background: #fff;
+            border: 3px solid #2c1a04;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-fill {
+            height: 100%;
+            background: #8bc34a;
+            width: 33%;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-question-card {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 3px solid #2c1a04;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2c1a04;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 3px 3px 0px #2c1a04;
+        }
+
+        .option-btn:hover {
+            background: #f1f8e9;
+            transform: translateY(-2px);
+            box-shadow: 3px 5px 0px #2c1a04;
+        }
+
+        .option-btn.correct-ans {
+            background: #c8e6c9 !important;
+            border-color: #2e7d32 !important;
+        }
+
+        .option-btn.wrong-ans {
+            background: #ffcdd2 !important;
+            border-color: #c62828 !important;
+        }
+
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px dashed #2c1a04;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .next-btn {
+            background: #4fc3f7;
+            border: 3px solid #2c1a04;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c1a04;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #2c1a04;
+            align-self: flex-end;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .certificate-panel {
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cert-stamp {
+            width: 100px;
+            height: 100px;
+            animation: bounce-active 1.5s infinite alternate ease-in-out;
+        }
+
+        /* 網頁左右兩側裝飾用的皮克敏啦啦隊 */
+        .pikmin-cheerleaders {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cheer-pikmin {
+            position: absolute;
+            width: 80px;
+            filter: drop-shadow(4px 4px 0px #2c1a04);
+        }
+
+        .cheer-left-down { bottom: 12%; left: 3%; animation: cheer-bounce 1s infinite alternate ease-in-out; }
+        .cheer-right-down { bottom: 10%; right: 3%; animation: cheer-bounce 1.3s infinite alternate-reverse ease-in-out; }
+
+        @keyframes cheer-bounce {
+            0% { transform: translateY(0) scaleY(1); }
+            100% { transform: translateY(-12px) scaleY(1.04); }
+        }
+
+        /* 響應式優化 */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                gap: 5px;
+            }
+            .tab-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+            .title-logo {
+                font-size: 1rem;
+            }
+            .lab-layout {
+                grid-template-columns: 1fr;
+            }
+            .water-tank {
+                height: 250px;
+            }
+            .plant-grid {
+                grid-template-columns: 1fr;
+            }
+            .cheer-pikmin {
+                display: none; /* 小螢幕隱藏啦啦隊避免遮擋 */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        
+        <!-- 頂部導覽列與分頁 -->
+        <div class="header-bar">
+            <div class="title-logo">
+                <span>🌱 皮克敏科學教室</span>
+            </div>
+            
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-game')">🎮 森林探險</button>
+                <button class="tab-btn" onclick="switchTab('tab-buoyancy')">💧 浮力實驗</button>
+                <button class="tab-btn" onclick="switchTab('tab-plants')">🌱 植物小百科</button>
+                <button class="tab-btn" onclick="switchTab('tab-quiz')">📝 探險小挑戰</button>
+            </div>
+        </div>
+
+        <!-- 主內容區域 -->
+        <div class="content-area">
+
+            <!-- ==========================================
+               分頁一：ROV 森林尋寶遊戲
+               ========================================== -->
+            <div id="tab-game" class="tab-content active">
+                <div class="game-layout">
+                    <div class="game-header">
+                        <div class="cartoon-panel" style="padding: 6px 12px; background: #fffdf0; border-width: 3px; font-weight: bold;">
+                            🤖 ROV 探測車
+                        </div>
+                        <div class="cartoon-panel" style="padding: 6px 12px; background: #ff8a80; border-width: 3px; font-weight: bold; color: #fff; text-shadow: 1.5px 1.5px 0px #2c1a04; display: flex; align-items: center; gap: 8px;">
+                            <span>水果積分:</span>
+                            <span id="score" style="background:#2c1a04; color:#fff; padding:1px 8px; border-radius:6px; border:1.5px solid #fff;">0</span>
+                        </div>
+                    </div>
+
+                    <!-- 6x6 地圖 -->
+                    <div class="forest-grid" id="gridMap">
+                        <!-- JS 會填入 36 個格線 -->
+                        <!-- 水果標靶 -->
+                        <div class="fruit-target" id="fruit" style="grid-column: 4; grid-row: 3;">
+                            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                                <path d="M 50 35 L 50 15 Q 65 10 58 5 Q 48 8 50 15" fill="none" stroke="#2c1a04" stroke-width="5" stroke-linecap="round" />
+                                <path d="M 50 15 C 38 12, 35 25, 48 20 Z" fill="#4caf50" stroke="#2c1a04" stroke-width="3" />
+                                <circle cx="50" cy="55" r="30" fill="#ff3366" stroke="#2c1a04" stroke-width="4" />
+                                <path d="M 38 35 C 32 40, 32 60, 42 70" fill="none" stroke="#ff85a2" stroke-width="3" stroke-linecap="round" />
+                                <ellipse cx="40" cy="45" rx="5" ry="8" fill="#ffffff" transform="rotate(-30 40 45)" />
+                                <circle cx="42" cy="62" r="2" fill="#2c1a04" />
+                                <circle cx="55" cy="52" r="2" fill="#2c1a04" />
+                            </svg>
+                        </div>
+
+                        <!-- ROV 小車 -->
+                        <div class="rov-robot" id="rov" style="grid-column: 1; grid-row: 1;">
+                            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                                <line x1="50" y1="35" x2="50" y2="10" stroke="#2c1a04" stroke-width="4" />
+                                <circle cx="50" cy="8" r="6" fill="#ffeb3b" stroke="#2c1a04" stroke-width="3" />
+                                <rect x="20" y="70" width="60" height="18" rx="9" fill="#78909c" stroke="#2c1a04" stroke-width="4" />
+                                <line x1="30" y1="70" x2="30" y2="88" stroke="#2c1a04" stroke-width="3" />
+                                <line x1="50" y1="70" x2="50" y2="88" stroke="#2c1a04" stroke-width="3" />
+                                <line x1="70" y1="70" x2="70" y2="88" stroke="#2c1a04" stroke-width="3" />
+                                <rect x="25" y="32" width="50" height="42" rx="12" fill="#fbc02d" stroke="#2c1a04" stroke-width="4" />
+                                <circle cx="50" cy="52" r="15" fill="#e0f7fa" stroke="#2c1a04" stroke-width="4" />
+                                <circle cx="50" cy="52" r="8" fill="#00e5ff" stroke="#2c1a04" stroke-width="3" />
+                                <circle cx="53" cy="49" r="3" fill="#ffffff" />
+                                <path d="M 25 55 Q 12 55 15 45" fill="none" stroke="#2c1a04" stroke-width="4" stroke-linecap="round" />
+                                <path d="M 75 55 Q 88 55 85 45" fill="none" stroke="#2c1a04" stroke-width="4" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 虛擬方向盤 -->
+                    <div class="d-pad">
+                        <button class="d-btn btn-up" onclick="moveROV(0, -1)">▲</button>
+                        <button class="d-btn btn-left" onclick="moveROV(-1, 0)">◀</button>
+                        <button class="d-btn btn-down" onclick="moveROV(0, 1)">▼</button>
+                        <button class="d-btn btn-right" onclick="moveROV(1, 0)">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+               分頁二：ROV 浮力模擬實驗室
+               ========================================== -->
+            <div id="tab-buoyancy" class="tab-content">
+                <div class="lab-layout">
+                    <!-- 互動水缸 -->
+                    <div class="water-tank-container">
+                        <div class="water-tank" id="waterTank">
+                            <!-- 升起的氣泡特效由 JS 生成 -->
+                            
+                            <!-- 實驗 ROV 主體 -->
+                            <div class="lab-rov" id="labRov">
+                                <!-- 受力箭頭：向上浮力 -->
+                                <div class="force-arrow arrow-buoyancy" id="arrowBuoyancy">
+                                    <span class="force-text" style="top: -25px;">向上 浮力 (B)</span>
+                                </div>
+                                <!-- 受力箭頭：向下重力 -->
+                                <div class="force-arrow arrow-gravity" id="arrowGravity">
+                                    <span class="force-text" style="bottom: -25px;">向下 重力 (G)</span>
+                                </div>
+                                
+                                <!-- 水箱中 ROV 的向量外觀 (有透明外層殼看見注水高度) -->
+                                <svg viewBox="0 0 100 100" width="100%" height="100%">
+                                    <rect x="15" y="30" width="70" height="50" rx="20" fill="#fbc02d" stroke="#2c1a04" stroke-width="4" />
+                                    <!-- 壓載艙（玻璃透明質感） -->
+                                    <rect x="25" y="45" width="50" height="28" rx="8" fill="#e0f7fa" stroke="#2c1a04" stroke-width="3" />
+                                    <!-- 壓載艙水面 (會用 JS 調節高度) -->
+                                    <rect id="ballastWaterFill" x="25" y="73" width="50" height="0" rx="2" fill="#29b6f6" opacity="0.8" />
+                                    <!-- 天線 -->
+                                    <line x1="50" y1="30" x2="50" y2="12" stroke="#2c1a04" stroke-width="3" />
+                                    <circle cx="50" cy="10" r="4" fill="#ffeb3b" stroke="#2c1a04" stroke-width="2" />
+                                    <!-- 鏡頭大眼 -->
+                                    <circle cx="50" cy="40" r="8" fill="#fff" stroke="#2c1a04" stroke-width="2" />
+                                    <circle cx="50" cy="40" r="4" fill="#0288d1" />
+                                    <!-- 小履帶 -->
+                                    <rect x="20" y="78" width="60" height="10" rx="4" fill="#455a64" stroke="#2c1a04" stroke-width="2.5" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作控制面板 -->
+                    <div class="cartoon-panel control-panel">
+                        <div>
+                            <h3>💧 ROV 壓載艙控制台</h3>
+                            <p style="font-size: 0.9rem; line-height: 1.4; margin: 0 0 15px 0; color: #5d4037;">
+                                ROV（水下無人機）是透過改變<b>「壓載艙」</b>內的水量來控制沉浮的。
+                                調整下方的滑桿，看看水量對「重力」與「沉浮」的影響吧！
+                            </p>
+                            
+                            <div class="slider-group">
+                                <label style="font-weight: bold; font-size: 0.95rem; display: flex; justify-content: space-between;">
+                                    <span>壓載艙注水量：</span>
+                                    <span id="sliderValue" style="color: #0288d1; font-weight: 900;">0 %</span>
+                                </label>
+                                <input type="range" min="0" max="100" value="0" class="ballast-slider" id="waterSlider" oninput="adjustBuoyancy(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="status-display" id="buoyancyStatus">
+                            浮力 (60) > 重力 (30) <br>
+                            ✨ <span style="color: #2e7d32;">ROV 比水輕，向上浮起！</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+               分頁三：植物百科
+               ========================================== -->
+            <div id="tab-plants" class="tab-content">
+                <div class="plant-layout">
+                    <div class="cartoon-panel" style="text-align: center; max-width: 600px; padding: 12px 20px;">
+                        <h2 style="margin: 0; font-size: 1.3rem;">🌱 森林裡的植物夥伴</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #5d4037;">
+                            在皮克敏探險的路上，有許多默默守護大地、生命力極強的神奇植物喔！點擊卡片認識牠們吧。
+                        </p>
+                    </div>
+
+                    <div class="plant-grid">
+                        <!-- 卡片一：蒲公英 -->
+                        <div class="plant-card" onclick="openPlantModal('dandelion')">
+                            <div class="plant-img-box">
+                                <svg viewBox="0 0 100 100" width="100%">
+                                    <path d="M 50 85 Q 50 45 50 35" fill="none" stroke="#4caf50" stroke-width="4" />
+                                    <circle cx="50" cy="35" r="16" fill="#ffee58" stroke="#2c1a04" stroke-width="2.5" />
+                                    <circle cx="50" cy="35" r="8" fill="#fdd835" />
+                                    <!-- 蓬鬆種子 -->
+                                    <circle cx="50" cy="35" r="24" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="4,4" />
+                                </svg>
+                            </div>
+                            <div class="plant-info-box">
+                                <h3>蒲公英 (Dandelion)</h3>
+                                <p>頭上頂著絨毛小傘的黃花，靠著風的力量把孩子帶到遠方...</p>
+                                <span style="font-size:0.75rem; color:#f57c00; font-weight:bold;">點擊看超能力 ➜</span>
+                            </div>
+                        </div>
+
+                        <!-- 卡片二：酢漿草 (三葉草) -->
+                        <div class="plant-card" onclick="openPlantModal('clover')">
+                            <div class="plant-img-box">
+                                <svg viewBox="0 0 100 100" width="100%">
+                                    <path d="M 50 80 Q 45 55 50 45" fill="none" stroke="#4caf50" stroke-width="4" />
+                                    <!-- 三片愛心葉 -->
+                                    <path d="M 50 45 C 40 35, 30 55, 50 50 Z" fill="#8bc34a" stroke="#2c1a04" stroke-width="2" />
+                                    <path d="M 50 45 C 60 35, 70 55, 50 50 Z" fill="#8bc34a" stroke="#2c1a04" stroke-width="2" />
+                                    <path d="M 50 45 C 50 25, 30 30, 50 48 Z" fill="#7cb342" stroke="#2c1a04" stroke-width="2" />
+                                </svg>
+                            </div>
+                            <div class="plant-info-box">
+                                <h3>酢漿草 (Clover)</h3>
+                                <p>常見的可愛三葉草，晚上會把葉子合起來睡覺？</p>
+                                <span style="font-size:0.75rem; color:#f57c00; font-weight:bold;">點擊看超能力 ➜</span>
+                            </div>
+                        </div>
+
+                        <!-- 卡片三：蕨類植物 -->
+                        <div class="plant-card" onclick="openPlantModal('fern')">
+                            <div class="plant-img-box">
+                                <svg viewBox="0 0 100 100" width="100%">
+                                    <path d="M 25 80 Q 50 40 75 40" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" />
+                                    <!-- 兩側羽狀葉 -->
+                                    <circle cx="35" cy="65" r="5" fill="#4caf50" />
+                                    <circle cx="45" cy="53" r="5" fill="#4caf50" />
+                                    <circle cx="58" cy="46" r="5" fill="#4caf50" />
+                                    <circle cx="70" cy="43" r="4" fill="#4caf50" />
+                                </svg>
+                            </div>
+                            <div class="plant-info-box">
+                                <h3>蕨類植物 (Fern)</h3>
+                                <p>恐龍時代就存在的綠色羽毛！不用開花結果，是用神奇的「孢子」繁殖。</p>
+                                <span style="font-size:0.75rem; color:#f57c00; font-weight:bold;">點擊看超能力 ➜</span>
+                            </div>
+                        </div>
+
+                        <!-- 卡片四：苔蘚 -->
+                        <div class="plant-card" onclick="openPlantModal('moss')">
+                            <div class="plant-img-box">
+                                <svg viewBox="0 0 100 100" width="100%">
+                                    <!-- 綠色草丘 -->
+                                    <path d="M 15 75 Q 50 40 85 75 Z" fill="#4caf50" stroke="#2c1a04" stroke-width="3" />
+                                    <path d="M 30 75 Q 50 55 70 75 Z" fill="#388e3c" />
+                                </svg>
+                            </div>
+                            <div class="plant-info-box">
+                                <h3>苔蘚植物 (Moss)</h3>
+                                <p>大森林的吸水綠色地毯！小小的身體能儲存超乎想像的水分。</p>
+                                <span style="font-size:0.75rem; color:#f57c00; font-weight:bold;">點擊看超能力 ➜</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+               分頁四：評量測驗
+               ========================================== -->
+            <div id="tab-quiz" class="tab-content">
+                <div class="quiz-container">
+                    
+                    <!-- 題目畫面 -->
+                    <div class="cartoon-panel quiz-question-card" id="quizQuestionPanel">
+                        <div>
+                            <!-- 進度條 -->
+                            <div class="quiz-progress-bar">
+                                <div class="quiz-progress-fill" id="quizProgress"></div>
+                            </div>
+                            <span style="font-size: 0.85rem; font-weight: bold; color: #795548;" id="questionNum">問題 1 / 3</span>
+                            <div class="question-text" id="questionText">載入中...</div>
+                        </div>
+
+                        <div class="options-list" id="optionsContainer">
+                            <!-- 由 JS 動態生成選項 -->
+                        </div>
+
+                        <!-- 答題解析回饋 -->
+                        <div class="quiz-feedback" id="quizFeedback"></div>
+
+                        <button class="next-btn" id="nextQuestionBtn" onclick="nextQuestion()">下一題 ➜</button>
+                    </div>
+
+                    <!-- 測驗完成證書 -->
+                    <div class="cartoon-panel certificate-panel" id="certificatePanel">
+                        <svg class="cert-stamp" viewBox="0 0 100 100">
+                            <!-- 亮金金徽章 -->
+                            <circle cx="50" cy="50" r="40" fill="#ffd54f" stroke="#2c1a04" stroke-width="4" />
+                            <polygon points="50,15 62,38 88,40 68,58 75,85 50,70 25,85 32,58 12,40 38,38" fill="#ffb300" stroke="#2c1a04" stroke-width="2" />
+                            <!-- 可愛皮克敏葉子頭飾 -->
+                            <path d="M 50 30 Q 50 10 65 10 C 65 25, 50 25, 50 30 Z" fill="#4caf50" stroke="#2c1a04" stroke-width="2" />
+                        </svg>
+                        
+                        <h2 style="margin: 5px 0 0 0; color: #c2185b;">🏆 探險大考驗合格！</h2>
+                        <p style="font-size: 1.1rem; line-height: 1.5; margin: 10px 0;">
+                            恭喜您成功答對所有題目！<br>
+                            您已經獲得了<b>「皮克敏森林科學家學士學位」</b>！
+                        </p>
+                        
+                        <button class="tab-btn" style="background:#81c784;" onclick="restartQuiz()">再挑戰一次 ↻</button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 網頁左右兩側：皮克敏啦啦隊 -->
+        <div class="pikmin-cheerleaders">
+            <!-- 橡實紅皮克敏 -->
+            <div class="cheer-pikmin cheer-left-down">
+                <svg viewBox="0 0 100 150" width="100%">
+                    <ellipse cx="50" cy="100" rx="23" ry="32" fill="#e53935" />
+                    <circle cx="50" cy="68" r="25" fill="#e53935" />
+                    <polygon points="50,60 50,74 20,67" fill="#e53935" />
+                    <circle cx="44" cy="59" r="7" fill="white" /><circle cx="44" cy="59" r="3.2" fill="black" />
+                    <circle cx="64" cy="59" r="7" fill="white" /><circle cx="64" cy="59" r="3.2" fill="black" />
+                    <path d="M 22 55 Q 16 34 50 34 Q 84 34 78 55 Q 70 82 50 82 Q 30 82 22 55 Z" fill="#9e5a24" />
+                    <path d="M 24 45 C 24 25, 76 25, 76 45 Z" fill="#6d4c41" />
+                    <rect x="48" y="20" width="4" height="10" rx="2" fill="#4e342e" />
+                    <rect x="49" y="8" width="2" height="15" fill="#7cbf37" />
+                    <ellipse cx="49" cy="6" rx="8" ry="4" fill="#8bc34a" />
+                </svg>
+            </div>
+
+            <!-- 冰凍皮克敏 -->
+            <div class="cheer-pikmin cheer-right-down">
+                <svg viewBox="0 0 110 150" width="100%">
+                    <polygon points="55,55 85,75 80,120 55,135 30,120 25,75" fill="#80deea" />
+                    <polygon points="55,55 85,75 70,95 55,75" fill="#b2ebf2" />
+                    <polygon points="55,75 70,95 55,135 40,95" fill="#4dd0e1" />
+                    <circle cx="42" cy="85" r="7" fill="white" /><circle cx="42" cy="85" r="3.2" fill="black" />
+                    <circle cx="68" cy="85" r="7" fill="white" /><circle cx="68" cy="85" r="3.2" fill="black" />
+                    <rect x="54" y="25" width="2" height="30" fill="#7cbf37" />
+                    <ellipse cx="54" cy="22" rx="9" ry="5" fill="#ffee58" />
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 植物知識彈出詳細說明 -->
+    <div class="modal-overlay" id="plantModal">
+        <div class="plant-modal">
+            <button class="close-modal-btn" onclick="closePlantModal()">×</button>
+            <h2 id="modalPlantTitle" style="color:#2e7d32; margin-top:10px;">植物</h2>
+            <div style="width:120px; height:120px; margin: 15px auto;" id="modalPlantSvg">
+                <!-- 動態注入 SVG -->
+            </div>
+            <div class="cartoon-panel" style="background:#f1f8e9; border-width: 3px; font-size:1rem; text-align:left; line-height:1.6;" id="modalPlantDesc">
+                植物描述
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 音樂合成器
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.28);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // ==========================================
+        // 分頁切換邏輯
+        // ==========================================
+        function switchTab(tabId) {
+            playSound('click');
+            // 隱藏所有分頁
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 顯示當前分頁
+            document.getElementById(tabId).classList.add('active');
+
+            // 更新按鈕樣式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // ==========================================
+        // 模組一：ROV 地圖尋寶遊戲 JS
+        // ==========================================
+        const gridMap = document.getElementById('gridMap');
+        for (let i = 0; i < 36; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('grid-cell');
+            gridMap.appendChild(cell);
+        }
+
+        const rov = document.getElementById('rov');
+        const fruit = document.getElementById('fruit');
+        const scoreEl = document.getElementById('score');
+
+        let rovX = 1, rovY = 1;
+        let fruitX = 4, fruitY = 3;
+        let score = 0;
+
+        function updatePositions() {
+            rov.style.gridColumn = rovX;
+            rov.style.gridRow = rovY;
+            fruit.style.gridColumn = fruitX;
+            fruit.style.gridRow = fruitY;
+
+            if (rovX === fruitX && rovY === fruitY) {
+                collectFruit();
+            }
+        }
+
+        function moveROV(dx, dy) {
+            const targetX = rovX + dx;
+            const targetY = rovY + dy;
+            if (targetX >= 1 && targetX <= 6 && targetY >= 1 && targetY <= 6) {
+                rovX = targetX;
+                rovY = targetY;
+                playSound('click');
+                updatePositions();
+            }
+        }
+
+        function collectFruit() {
+            score++;
+            scoreEl.textContent = score;
+            playSound('correct');
+            createSplatterParticles();
+
+            // 重新刷新水果位置
+            let newX, newY;
+            do {
+                newX = Math.floor(Math.random() * 6) + 1;
+                newY = Math.floor(Math.random() * 6) + 1;
+            } while (newX === rovX && newY === rovY);
+            fruitX = newX;
+            fruitY = newY;
+            updatePositions();
+        }
+
+        function createSplatterParticles() {
+            const fruitRect = fruit.getBoundingClientRect();
+            const centerX = fruitRect.left + fruitRect.width / 2;
+            const centerY = fruitRect.top + fruitRect.height / 2;
+            const colors = ['#ff3366', '#ffeb3b', '#4caf50', '#ffffff'];
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.classList.add('sparkle-particle');
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                p.style.left = `${centerX}px`;
+                p.style.top = `${centerY}px`;
+                document.body.appendChild(p);
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 30 + Math.random() * 50;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                p.animate([
+                    { transform: 'translate(0, 0) scale(1.3)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0.2)`, opacity: 0 }
+                ], {
+                    duration: 500,
+                    easing: 'ease-out',
+                    fill: 'forwards'
+                });
+                setTimeout(() => p.remove(), 550);
+            }
+        }
+
+        // 鍵盤移動監聽
+        window.addEventListener('keydown', function(event) {
+            // 只在「森林探險」分頁為啟用狀態時才反應鍵盤
+            if (!document.getElementById('tab-game').classList.contains('active')) return;
+            switch (event.key) {
+                case 'ArrowUp':
+                case 'KeyW':
+                    event.preventDefault(); moveROV(0, -1); break;
+                case 'ArrowDown':
+                case 'KeyS':
+                    event.preventDefault(); moveROV(0, 1); break;
+                case 'ArrowLeft':
+                case 'KeyA':
+                    event.preventDefault(); moveROV(-1, 0); break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    event.preventDefault(); moveROV(1, 0); break;
+            }
+        });
+
+        // ==========================================
+        // 模組二：浮力模擬實驗 JS
+        // ==========================================
+        const labRov = document.getElementById('labRov');
+        const arrowGravity = document.getElementById('arrowGravity');
+        const ballastWaterFill = document.getElementById('ballastWaterFill');
+        const sliderValue = document.getElementById('sliderValue');
+        const buoyancyStatus = document.getElementById('buoyancyStatus');
+        const waterTank = document.getElementById('waterTank');
+
+        // 生成水缸上升氣泡
+        setInterval(() => {
+            if (document.getElementById('tab-buoyancy').classList.contains('active')) {
+                const b = document.createElement('div');
+                b.classList.add('bubble');
+                b.style.left = `${Math.random() * 90}%`;
+                const size = Math.random() * 12 + 6;
+                b.style.width = `${size}px`;
+                b.style.height = `${size}px`;
+                waterTank.appendChild(b);
+                setTimeout(() => b.remove(), 4000);
+            }
+        }, 500);
+
+        function adjustBuoyancy(pct) {
+            pct = parseInt(pct);
+            sliderValue.textContent = `${pct} %`;
+            
+            // 1. 調整 ROV 艙內的藍色灌水動畫 (高度從 0 到 28px)
+            const waterHeight = (pct / 100) * 28;
+            ballastWaterFill.style.height = `${waterHeight}px`;
+            ballastWaterFill.style.y = `${73 - waterHeight}`;
+
+            // 2. 物理公式計算：浮力固定 60，重力隨水量變大 (基礎重力 30 + 水量重力 60)
+            const buoyancyForce = 60;
+            const gravityForce = 30 + (pct / 100) * 60; // 重力從 30 變到 90
+
+            // 3. 調整向下紅色箭頭的高度 (視覺化長度)
+            arrowGravity.style.height = `${gravityForce * 1.5}px`;
+
+            // 4. 計算 ROV 的沉浮位置
+            if (gravityForce < buoyancyForce) {
+                // 比水輕 -> 漂浮在最上面
+                labRov.style.bottom = "200px";
+                buoyancyStatus.innerHTML = `浮力 (${buoyancyForce}) ＞ 重力 (${Math.round(gravityForce)})<br>✨ <span style="color: #2e7d32;">壓載艙水少，ROV 向上浮起！</span>`;
+            } else if (Math.round(gravityForce) === buoyancyForce) {
+                // 重力等於浮力 -> 懸浮在半空中
+                labRov.style.bottom = "120px";
+                buoyancyStatus.innerHTML = `浮力 (${buoyancyForce}) ＝ 重力 (${Math.round(gravityForce)})<br>⚖️ <span style="color: #ef6c00;">重力與浮力平衡，ROV 靜止懸浮中！</span>`;
+            } else {
+                // 比水重 -> 沉到最下面
+                labRov.style.bottom = "20px";
+                buoyancyStatus.innerHTML = `浮力 (${buoyancyForce}) ＜ 重力 (${Math.round(gravityForce)})<br>⚓ <span style="color: #c62828;">壓載艙水變重，ROV 沉入水底！</span>`;
+            }
+        }
+        // 預設初始化一次實驗數據
+        adjustBuoyancy(0);
+
+        // ==========================================
+        // 模組三：植物百科百科 JS
+        // ==========================================
+        const plantData = {
+            dandelion: {
+                title: "蒲公英 (Dandelion)",
+                desc: "<b>🌟 植物生存超能力：【風力降落傘】</b><br><br>蒲公英的花朵在成熟後，會長出白色蓬鬆的圓球。這其實是幾百個帶有微型纖毛的種子小傘！只要微風輕輕一吹，降落傘就會乘著風飛上高空，甚至可以漂流到幾公里外的新土地發芽，是高明的空中飛行旅行家！",
+                svg: `<svg viewBox="0 0 100 100" width="100%"><path d="M 50 85 Q 50 45 50 35" fill="none" stroke="#4caf50" stroke-width="4"/><circle cx="50" cy="35" r="16" fill="#ffee58" stroke="#2c1a04" stroke-width="2.5"/><circle cx="50" cy="35" r="24" fill="none" stroke="#2c1a04" stroke-dasharray="3,3" stroke-width="1.5"/></svg>`
+            },
+            clover: {
+                title: "酢漿草 (Clover)",
+                desc: "<b>🌟 植物生存超能力：【睡眠運動】</b><br><br>酢漿草的愛心形葉子對光線非常敏感！白天時，牠們會張開葉片吸收滿滿的太陽光行光合作用；但當夜幕降臨、沒有陽光時，葉片就會摺疊、垂下「閉合睡覺」。這能幫助牠們減少水分蒸散，並在寒冷的夜晚保護自己！",
+                svg: `<svg viewBox="0 0 100 100" width="100%"><path d="M 50 80 Q 45 55 50 45" fill="none" stroke="#4caf50" stroke-width="4"/><path d="M 50 45 C 40 35, 30 55, 50 50 Z" fill="#8bc34a" stroke="#2c1a04" stroke-width="2"/><path d="M 50 45 C 60 35, 70 55, 50 50 Z" fill="#8bc34a" stroke="#2c1a04" stroke-width="2"/><path d="M 50 45 C 50 25, 30 30, 50 48 Z" fill="#7cb342" stroke="#2c1a04" stroke-width="2"/></svg>`
+            },
+            fern: {
+                title: "蕨類植物 (Fern)",
+                desc: "<b>🌟 植物生存超能力：【遠古孢子盾牌】</b><br><br>蕨類非常古老，在恐龍在地球上奔跑以前就存在了！牠們不開花也不結果，而是把成千上萬的「微型孢子」藏在葉子背面。只要一有水分，孢子就會彈射出去，在陰暗潮濕的地表長出綠色地毯，生命力無比強韌！",
+                svg: `<svg viewBox="0 0 100 100" width="100%"><path d="M 25 80 Q 50 40 75 40" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round"/><circle cx="35" cy="65" r="5" fill="#4caf50"/><circle cx="45" cy="53" r="5" fill="#4caf50"/><circle cx="58" cy="46" r="5" fill="#4caf50"/><circle cx="70" cy="43" r="4" fill="#4caf50"/></svg>`
+            },
+            moss: {
+                title: "苔蘚植物 (Moss)",
+                desc: "<b>🌟 植物生存超能力：【森林終極吸水海綿】</b><br><br>苔蘚是極小的原始陸生植物。牠們雖然沒有真正的根、莖、葉來運送水分，但密密麻麻的葉片能直接像大福海綿一樣，把雨水和空氣中的水霧完全鎖在身體裡！牠們保護了森林的泥土不被大雨沖走，是水土保持的無名英雄！",
+                svg: `<svg viewBox="0 0 100 100" width="100%"><path d="M 15 75 Q 50 40 85 75 Z" fill="#4caf50" stroke="#2c1a04" stroke-width="3"/><path d="M 30 75 Q 50 55 70 75 Z" fill="#388e3c"/></svg>`
+            }
+        };
+
+        function openPlantModal(plantId) {
+            const data = plantData[plantId];
+            document.getElementById('modalPlantTitle').textContent = data.title;
+            document.getElementById('modalPlantSvg').innerHTML = data.svg;
+            document.getElementById('modalPlantDesc').innerHTML = data.desc;
+            document.getElementById('plantModal').style.display = "flex";
+            playSound('click');
+        }
+
+        function closePlantModal() {
+            document.getElementById('plantModal').style.display = "none";
+            playSound('click');
+        }
+
+        // ==========================================
+        // 模組四：評量測驗 JS
+        // ==========================================
+        const questions = [
+            {
+                q: "1. 當 ROV 想要潛入深海時，壓載艙（Ballast Tank）應該進行什麼動作？",
+                options: ["往壓載艙「注入海水」增加重力", "將壓載艙「排空空氣」減少重力", "不需要動，直接踩油門即可"],
+                correct: 0,
+                explain: "💡 <b>解析：</b>答對了！將海水引進壓載艙，會使 ROV 的重量增加（重力大於浮力），就能像潛水艇一樣順利下潛沉入水中。"
+            },
+            {
+                q: "2. 如果 ROV 目前正處於「重力 60 ＝ 浮力 60」的平衡狀態，牠在水裡會呈現什麼狀態？",
+                options: ["沉入最底部", "靜止懸浮在水中", "飛快地衝出水面"],
+                correct: 1,
+                explain: "💡 <b>解析：</b>非常正確！當向下重力等於向上浮力時，合力為零，ROV 就會穩定地靜止懸浮在水中，方便進行探測！"
+            },
+            {
+                q: "3. 關於森林裡的「蕨類植物」，牠們是用什麼神奇的構造來繁衍下一代的？",
+                options: ["美麗的粉紅色花朵與果實", "藏在葉子背面的孢子", "靠風傳播的絨毛種子降落傘"],
+                correct: 1,
+                explain: "💡 <b>解析：</b>厲害！蕨類植物不開花，牠們是利用葉子背面的孢子囊堆（小圓點）散播微小的『孢子』進行繁殖的喔！"
+            }
+        ];
+
+        let currentQuestionIdx = 0;
+        let answered = false;
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestionIdx];
+            
+            // 進度條
+            const pct = ((currentQuestionIdx + 1) / questions.length) * 100;
+            document.getElementById('quizProgress').style.width = `${pct}%`;
+            document.getElementById('questionNum').textContent = `問題 ${currentQuestionIdx + 1} / ${questions.length}`;
+            document.getElementById('questionText').textContent = q.q;
+
+            // 渲染選項
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = "";
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+
+            // 隱藏反饋與下一題按鈕
+            document.getElementById('quizFeedback').style.display = "none";
+            document.getElementById('nextQuestionBtn').style.display = "none";
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            if (answered) return; // 避免重複點擊答題
+            answered = true;
+
+            const q = questions[currentQuestionIdx];
+            const feedback = document.getElementById('quizFeedback');
+
+            // 禁用所有按鈕
+            document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+
+            if (selectedIdx === q.correct) {
+                // 答對
+                btnElement.classList.add('correct-ans');
+                feedback.innerHTML = `<span style="color:#2e7d32; font-weight:bold;">🎉 太棒了，答對了！</span><br>${q.explain}`;
+                feedback.style.background = "#e8f5e9";
+                playSound('correct');
+            } else {
+                // 答錯
+                btnElement.classList.add('wrong-ans');
+                // 將正確答案標綠
+                document.querySelectorAll('.option-btn')[q.correct].classList.add('correct-ans');
+                feedback.innerHTML = `<span style="color:#c62828; font-weight:bold;">❌ 差一點點，再想一想！</span><br>${q.explain}`;
+                feedback.style.background = "#ffebee";
+                playSound('wrong');
+            }
+
+            feedback.style.display = "block";
+            document.getElementById('nextQuestionBtn').style.display = "block";
+        }
+
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < questions.length) {
+                loadQuestion();
+            } else {
+                // 完成全部挑戰，顯示證書
+                document.getElementById('quizQuestionPanel').style.display = "none";
+                document.getElementById('certificatePanel').style.display = "flex";
+                playSound('correct');
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestionIdx = 0;
+            document.getElementById('quizQuestionPanel').style.display = "flex";
+            document.getElementById('certificatePanel').style.display = "none";
+            loadQuestion();
+        }
+
+        // 初始化測驗第一題
+        loadQuestion();
+    </script>
+</body>
+</html>
