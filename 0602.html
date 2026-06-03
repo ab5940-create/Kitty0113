@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎒 趣味隨堂小測驗</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans TC & Fredoka (可愛英文字體) -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', 'Fredoka', sans-serif;
+    }
+    /* 漸變與微調 */
+    .bg-gradient-custom {
+      background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 50%, #f3e8ff 100%);
+    }
+  </style>
+</head>
+<body class="bg-gradient-custom min-h-screen py-8 px-4 flex flex-col justify-between relative overflow-x-hidden">
+
+  <!-- 畫布背景煙火/紙花效果 -->
+  <canvas id="confetti-canvas" class="pointer-events-none absolute inset-0 w-full h-full z-40 hidden"></canvas>
+
+  <!-- 右上角教師設定按鈕 -->
+  <div class="fixed top-4 right-4 z-30">
+    <button id="settings-btn" class="bg-white/80 backdrop-blur-md hover:bg-white text-indigo-600 p-3 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center" title="教師雲端同步設定">
+      <!-- 齒輪 Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- 主容器 -->
+  <main class="max-w-xl w-full mx-auto bg-white/70 backdrop-blur-lg rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 flex-grow flex flex-col justify-between">
+    
+    <!-- 標題區域 -->
+    <header class="text-center mb-8">
+      <div class="inline-block bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm mb-3 shadow-sm">
+        📝 隨堂快速檢測
+      </div>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">國中自然與人文小測驗</h1>
+      <p class="text-slate-500 mt-2 text-sm md:text-base">認真作答，完成後點選下方按鈕，就能立即查看成績唷！</p>
+    </header>
+
+    <!-- 測驗表單 -->
+    <form id="quiz-form" class="space-y-6 flex-grow">
+      
+      <!-- 學生姓名輸入卡片 -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-transparent">
+        <label for="student-name" class="block text-slate-700 font-bold mb-2 flex items-center text-lg">
+          <span class="text-indigo-500 mr-2 text-xl">👤</span> 學生姓名
+          <span class="text-red-500 text-sm ml-1.5">*必填</span>
+        </label>
+        <input type="text" id="student-name" name="student-name" required placeholder="請輸入你的姓名..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none text-slate-700 placeholder-slate-400 text-base transition-colors">
+      </div>
+
+      <!-- 第一題 -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex items-start">
+          <span class="bg-indigo-500 text-white font-bold w-7 h-7 rounded-full flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">1</span>
+          <h2 class="text-slate-800 font-bold text-lg leading-snug">台灣最高的山是哪一座？</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 gap-3 pl-10">
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q1" value="阿里山" required class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">阿里山</span>
+          </label>
+          
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q1" value="玉山" class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">玉山</span>
+          </label>
+          
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q1" value="陽明山" class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">陽明山</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 第二題 -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex items-start">
+          <span class="bg-indigo-500 text-white font-bold w-7 h-7 rounded-full flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">2</span>
+          <h2 class="text-slate-800 font-bold text-lg leading-snug">水的三態中，固態稱為什麼？</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 gap-3 pl-10">
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q2" value="冰" required class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">冰</span>
+          </label>
+          
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q2" value="水蒸氣" class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">水蒸氣</span>
+          </label>
+          
+          <label class="flex items-center p-3.5 rounded-xl border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all relative">
+            <input type="radio" name="q2" value="雲" class="w-5 h-5 text-indigo-600 focus:ring-indigo-400 border-slate-300">
+            <span class="ml-3 text-slate-700 font-medium">雲</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 送出按鈕 -->
+      <div class="pt-4">
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none text-lg flex items-center justify-center gap-2">
+          <span>🚀 送出並看成績</span>
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- 頁尾宣告 -->
+  <footer class="text-center text-xs text-slate-400 mt-6">
+    © 2026 隨堂線上快速評量系統 - 適合課堂練習與即時統計
+  </footer>
+
+  <!-- 教師設定 Modal -->
+  <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="settings-card">
+      <div class="bg-indigo-600 p-5 text-white flex justify-between items-center">
+        <h3 class="text-xl font-bold flex items-center gap-2">
+          <span>⚙️</span> 教師後台同步設定
+        </h3>
+        <button id="close-settings" class="text-white/80 hover:text-white focus:outline-none text-2xl">&times;</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-slate-500 text-sm leading-relaxed">
+          請貼上您先前部署為 Web App 的 **Google Apps Script 網頁應用程式 URL**。設定完成後，學生的作答數據將會自動同步寫入 Google 試算表！
+        </p>
+        <div class="space-y-1.5">
+          <label class="block text-slate-700 font-bold text-sm">GAS Web App URL :</label>
+          <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button id="clear-settings" class="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-xl transition-colors font-medium">還原預設網址</button>
+          <button id="save-settings" class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-bold shadow-md">儲存設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成績回報彈出視窗 (Modal) -->
+  <div id="result-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="result-card">
+      
+      <!-- 熱情的主題橫幅 -->
+      <div id="result-banner" class="p-6 text-center text-white flex flex-col items-center">
+        <span id="result-emoji" class="text-6xl mb-2">🎉</span>
+        <h3 id="result-title" class="text-2xl font-black">挑戰成功！</h3>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- 分數大字 -->
+        <div class="text-center">
+          <p class="text-slate-400 text-sm font-semibold tracking-wider">你的得分</p>
+          <p class="text-6xl font-black text-slate-800 my-1"><span id="score-display" class="font-fredoka text-indigo-600">0</span> <span class="text-2xl text-slate-500">/ 100</span></p>
+        </div>
+
+        <!-- 答題狀況 -->
+        <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-slate-500 font-medium">答對題數：</span>
+            <span class="font-bold text-slate-700" id="correct-count-display">0 / 2 題</span>
+          </div>
+          <hr class="border-slate-200">
+          <!-- 題目詳細解答 -->
+          <div class="space-y-2.5 text-xs">
+            <div id="q1-feedback" class="flex flex-col gap-0.5">
+              <span class="font-bold text-slate-700">Q1. 台灣最高的山：</span>
+              <span id="q1-status" class="font-semibold"></span>
+            </div>
+            <div id="q2-feedback" class="flex flex-col gap-0.5">
+              <span class="font-bold text-slate-700">Q2. 水的固態稱為：</span>
+              <span id="q2-status" class="font-semibold"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 雲端同步狀態 -->
+        <div id="sync-status-box" class="hidden rounded-xl p-3 text-xs flex items-center gap-2">
+          <!-- 讀取轉圈圈 -->
+          <svg id="sync-spinner" class="animate-spin h-4 w-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="sync-message" class="font-medium text-slate-600">正在傳送成績到雲端試算表...</span>
+        </div>
+
+        <!-- 確定按鈕 -->
+        <div>
+          <button id="close-result" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl transition-colors focus:outline-none">
+            好，我知道了！
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // 預設教師的 Google Apps Script API 連結
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbyyHEZtVYjk2eMr_rJ3pknzsk9GuKsgl16YSLoIqn7nbudcdtjuw4E57eEfnpYQmLxS2w/exec";
+
+    // 正確答案定義
+    const correctAnswers = {
+      q1: "玉山",
+      q2: "冰"
+    };
+
+    // DOM 元素選取
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsCard = document.getElementById('settings-card');
+    const closeSettings = document.getElementById('close-settings');
+    const saveSettings = document.getElementById('save-settings');
+    const clearSettings = document.getElementById('clear-settings');
+    const gasUrlInput = document.getElementById('gas-url-input');
+
+    const quizForm = document.getElementById('quiz-form');
+    const resultModal = document.getElementById('result-modal');
+    const resultCard = document.getElementById('result-card');
+    const closeResult = document.getElementById('close-result');
+    const scoreDisplay = document.getElementById('score-display');
+    const correctCountDisplay = document.getElementById('correct-count-display');
+    const q1Status = document.getElementById('q1-status');
+    const q2Status = document.getElementById('q2-status');
+    const syncStatusBox = document.getElementById('sync-status-box');
+    const syncSpinner = document.getElementById('sync-spinner');
+    const syncMessage = document.getElementById('sync-message');
+    const resultBanner = document.getElementById('result-banner');
+    const resultEmoji = document.getElementById('result-emoji');
+    const resultTitle = document.getElementById('result-title');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+
+    // 初始化：載入先前儲存的 GAS URL（若無則套用預設的 URL）
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedUrl = localStorage.getItem('gasQuizUrl');
+      if (savedUrl) {
+        gasUrlInput.value = savedUrl;
+      } else {
+        gasUrlInput.value = DEFAULT_GAS_URL;
+      }
+    });
+
+    // --- 教師設定彈出窗控制 ---
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.classList.remove('hidden');
+      setTimeout(() => {
+        settingsCard.classList.remove('scale-95', 'opacity-0');
+        settingsCard.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    });
+
+    const hideSettingsModal = () => {
+      settingsCard.classList.remove('scale-100', 'opacity-100');
+      settingsCard.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        settingsModal.classList.add('hidden');
+      }, 300);
+    };
+
+    closeSettings.addEventListener('click', hideSettingsModal);
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) hideSettingsModal();
+    });
+
+    saveSettings.addEventListener('click', () => {
+      const url = gasUrlInput.value.trim();
+      if (url && !url.startsWith('https://')) {
+        alert('請輸入有效的網頁應用程式 URL（必須以 https:// 開頭）');
+        return;
+      }
+      localStorage.setItem('gasQuizUrl', url);
+      hideSettingsModal();
+    });
+
+    // 還原為系統預設網址
+    clearSettings.addEventListener('click', () => {
+      gasUrlInput.value = DEFAULT_GAS_URL;
+      localStorage.removeItem('gasQuizUrl');
+      hideSettingsModal();
+    });
+
+
+    // --- 測驗表單送出控制 ---
+    quizForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('student-name').value.trim();
+      const q1Val = document.querySelector('input[name="q1"]:checked').value;
+      const q2Val = document.querySelector('input[name="q2"]:checked').value;
+
+      // 計算分數
+      let score = 0;
+      let q1Correct = false;
+      let q2Correct = false;
+
+      if (q1Val === correctAnswers.q1) {
+        score += 50;
+        q1Correct = true;
+      }
+      if (q2Val === correctAnswers.q2) {
+        score += 50;
+        q2Correct = true;
+      }
+
+      // 更新答案反饋 UI
+      q1Status.textContent = q1Correct ? `答對了！(選了：${q1Val})` : `答錯囉，你選了：${q1Val} (正確答案是：${correctAnswers.q1})`;
+      q1Status.className = q1Correct ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-500';
+
+      q2Status.textContent = q2Correct ? `答對了！(選了：${q2Val})` : `答錯囉，你選了：${q2Val} (正確答案是：${correctAnswers.q2})`;
+      q2Status.className = q2Correct ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-500';
+
+      scoreDisplay.textContent = score;
+      correctCountDisplay.textContent = `${(q1Correct ? 1 : 0) + (q2Correct ? 1 : 0)} / 2 題`;
+
+      // 依分數自訂彈出視窗 Banner 的樣式
+      if (score === 100) {
+        resultBanner.className = 'p-6 text-center text-white flex flex-col items-center bg-gradient-to-r from-emerald-400 to-teal-500';
+        resultEmoji.textContent = '🏆';
+        resultTitle.textContent = '滿分！太神啦！';
+        startConfetti(); // 觸發滿分慶祝紙花
+      } else if (score === 50) {
+        resultBanner.className = 'p-6 text-center text-white flex flex-col items-center bg-gradient-to-r from-amber-400 to-orange-500';
+        resultEmoji.textContent = '✨';
+        resultTitle.textContent = '再接再厲，表現不錯唷！';
+      } else {
+        resultBanner.className = 'p-6 text-center text-white flex flex-col items-center bg-gradient-to-r from-rose-400 to-red-500';
+        resultEmoji.textContent = '💡';
+        resultTitle.textContent = '加油！多複習會更棒！';
+      }
+
+      // 開啟結果彈出視窗
+      resultModal.classList.remove('hidden');
+      setTimeout(() => {
+        resultCard.classList.remove('scale-95', 'opacity-0');
+        resultCard.classList.add('scale-100', 'opacity-100');
+      }, 10);
+
+      // --- Google Apps Script 同步機制 ---
+      // 優先使用 LocalStorage 的自訂網址，若無則使用預設寫死在系統內的網址
+      const targetUrl = localStorage.getItem('gasQuizUrl') || DEFAULT_GAS_URL;
+      
+      if (targetUrl) {
+        syncStatusBox.classList.remove('hidden');
+        syncSpinner.classList.remove('hidden');
+        syncMessage.textContent = '正在將成績傳送到雲端試算表...';
+        syncMessage.className = 'font-medium text-slate-600';
+
+        // 呼叫 GAS (使用 text/plain 的 POST 防止 CORS OPTIONS 預檢被阻擋)
+        fetch(targetUrl, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: JSON.stringify({
+            name: name,
+            score: score
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            syncSpinner.classList.add('hidden');
+            syncMessage.textContent = '✅ 成績已同步至教師試算表！';
+            syncMessage.className = 'font-semibold text-emerald-600';
+          } else {
+            throw new Error(data.message || '寫入失敗');
+          }
+        })
+        .catch(err => {
+          syncSpinner.classList.add('hidden');
+          syncMessage.textContent = '❌ 同步失敗 (可告知老師檢查網路或權限)';
+          syncMessage.className = 'font-semibold text-rose-500';
+          console.error(err);
+        });
+      } else {
+        // 未設定同步 URL 則隱藏同步狀態欄
+        syncStatusBox.classList.add('hidden');
+      }
+    });
+
+    // 關閉結果視窗
+    closeResult.addEventListener('click', () => {
+      resultCard.classList.remove('scale-100', 'opacity-100');
+      resultCard.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        resultModal.classList.add('hidden');
+        stopConfetti();
+        quizForm.reset();
+      }, 300);
+    });
+
+
+    // --- 簡單又好玩的極簡彩色灑紙花效果 (Confetti) ---
+    let animationFrameId;
+    function startConfetti() {
+      confettiCanvas.classList.remove('hidden');
+      const ctx = confettiCanvas.getContext('2d');
+      let width = confettiCanvas.width = window.innerWidth;
+      let height = confettiCanvas.height = window.innerHeight;
+
+      // 視窗縮放適配
+      window.addEventListener('resize', () => {
+        width = confettiCanvas.width = window.innerWidth;
+        height = confettiCanvas.height = window.innerHeight;
+      });
+
+      const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+      const particles = [];
+
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height - height,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * height,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10 - 5,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+          tiltAngle: 0
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach((p, index) => {
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.x += Math.sin(p.tiltAngle);
+          p.tilt = Math.sin(p.tiltAngle - index / 3) * 15;
+
+          if (p.y > height) {
+            particles[index] = p;
+            p.x = Math.random() * width;
+            p.y = -20;
+            p.tilt = Math.random() * 10 - 5;
+          }
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        });
+
+        animationFrameId = requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
+    function stopConfetti() {
+      cancelAnimationFrame(animationFrameId);
+      const ctx = confettiCanvas.getContext('2d');
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiCanvas.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
