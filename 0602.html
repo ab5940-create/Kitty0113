@@ -186,13 +186,20 @@
         </div>
 
         <!-- 雲端同步狀態 -->
-        <div id="sync-status-box" class="hidden rounded-xl p-3 text-xs flex items-center gap-2">
-          <!-- 讀取轉圈圈 -->
-          <svg id="sync-spinner" class="animate-spin h-4 w-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span id="sync-message" class="font-medium text-slate-600">正在傳送成績到雲端試算表...</span>
+        <div id="sync-status-box" class="hidden rounded-xl p-3 text-xs flex flex-col gap-2 bg-slate-50 border border-slate-100">
+          <div class="flex items-center gap-2">
+            <!-- 讀取轉圈圈 -->
+            <svg id="sync-spinner" class="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="sync-message" class="font-medium text-slate-600">正在傳送成績到雲端試算表...</span>
+          </div>
+          
+          <!-- 錯誤時顯示的排錯按鈕 -->
+          <button id="troubleshoot-btn" class="hidden w-full py-1.5 px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-center font-bold border border-red-200 transition-colors mt-1">
+            🛠️ 點我查看「10秒排錯指南」
+          </button>
         </div>
 
         <!-- 確定按鈕 -->
@@ -203,6 +210,51 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- 10秒排錯指南 Modal -->
+  <div id="troubleshoot-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4">
+      <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+          <span>🛠️</span> 雲端同步排錯助理
+        </h3>
+        <button id="close-troubleshoot" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+      
+      <div class="space-y-4 text-sm text-slate-600 leading-relaxed max-h-[350px] overflow-y-auto pr-1">
+        <p class="font-semibold text-red-500">同步失敗通常是因為 Google 的防護機制被觸發，請依序檢查以下三點：</p>
+        
+        <div class="space-y-3">
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-100">
+            <h4 class="font-bold text-amber-800 mb-1">🎯 1.「誰有權限存取」是否選錯？（最常見）</h4>
+            <p class="text-xs">
+              在新增部署時，<strong>「誰有權限存取」(Who has access)</strong> 必須選擇 <strong>「任何人」(Anyone)</strong>。如果選成「我自己」，學生的瀏覽器會被阻擋連線。
+            </p>
+          </div>
+          
+          <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+            <h4 class="font-bold text-indigo-800 mb-1">🔄 2. 有沒有建立「新版本」部署？</h4>
+            <p class="text-xs">
+              在修改完 `Code.gs` 後，不可以只點擊儲存！您必須點選 <strong>「部署」 &gt; 「管理部署」 &gt; 「編輯 (鉛筆圖示)」 &gt; 「版本」選擇「新版本」</strong>，然後按下「部署」，否則網址不會生效。
+            </p>
+          </div>
+
+          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+            <h4 class="font-bold text-emerald-800 mb-1">🔑 3. 首次部署是否完成安全授權？</h4>
+            <p class="text-xs">
+              第一次部署時，會跳出「審查權限」視窗。必須點選您的 Google 帳號、點擊「進階」、點擊「前往...（不安全）」並選擇「允許」，GAS 才能成功寫入工作表。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button id="ok-troubleshoot" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition-colors">
+          我知道了，馬上去檢查！
+        </button>
+      </div>
     </div>
   </div>
 
@@ -233,9 +285,18 @@
     const correctCountDisplay = document.getElementById('correct-count-display');
     const q1Status = document.getElementById('q1-status');
     const q2Status = document.getElementById('q2-status');
+    
+    // 同步狀態
     const syncStatusBox = document.getElementById('sync-status-box');
     const syncSpinner = document.getElementById('sync-spinner');
     const syncMessage = document.getElementById('sync-message');
+    const troubleshootBtn = document.getElementById('troubleshoot-btn');
+
+    // 排錯助手 Modal
+    const troubleshootModal = document.getElementById('troubleshoot-modal');
+    const closeTroubleshoot = document.getElementById('close-troubleshoot');
+    const okTroubleshoot = document.getElementById('ok-troubleshoot');
+
     const resultBanner = document.getElementById('result-banner');
     const resultEmoji = document.getElementById('result-emoji');
     const resultTitle = document.getElementById('result-title');
@@ -290,6 +351,19 @@
       hideSettingsModal();
     });
 
+    // --- 排錯助手彈出視窗控制 ---
+    troubleshootBtn.addEventListener('click', () => {
+      troubleshootModal.classList.remove('hidden');
+    });
+    closeTroubleshoot.addEventListener('click', () => {
+      troubleshootModal.classList.add('hidden');
+    });
+    okTroubleshoot.addEventListener('click', () => {
+      troubleshootModal.classList.add('hidden');
+    });
+    troubleshootModal.addEventListener('click', (e) => {
+      if (e.target === troubleshootModal) troubleshootModal.classList.add('hidden');
+    });
 
     // --- 測驗表單送出控制 ---
     quizForm.addEventListener('submit', (e) => {
@@ -353,22 +427,27 @@
       if (targetUrl) {
         syncStatusBox.classList.remove('hidden');
         syncSpinner.classList.remove('hidden');
+        troubleshootBtn.classList.add('hidden'); // 先隱藏排錯按鈕
         syncMessage.textContent = '正在將成績傳送到雲端試算表...';
         syncMessage.className = 'font-medium text-slate-600';
 
-        // 呼叫 GAS (使用 text/plain 的 POST 防止 CORS OPTIONS 預檢被阻擋)
+        // 🚀 使用 URLSearchParams 將資料封裝為 Form 格式傳送
+        // 此方式能夠最大程度繞過瀏覽器的 CORS OPTIONS 預檢限制，相容性最強！
+        const formData = new URLSearchParams();
+        formData.append('name', name);
+        formData.append('score', score);
+
         fetch(targetUrl, {
           method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'text/plain'
-          },
-          body: JSON.stringify({
-            name: name,
-            score: score
-          })
+          body: formData,
+          mode: 'cors'
         })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('網路回應不成功');
+          }
+          return res.json();
+        })
         .then(data => {
           if (data.status === 'success') {
             syncSpinner.classList.add('hidden');
@@ -382,7 +461,8 @@
           syncSpinner.classList.add('hidden');
           syncMessage.textContent = '❌ 同步失敗 (可告知老師檢查網路或權限)';
           syncMessage.className = 'font-semibold text-rose-500';
-          console.error(err);
+          troubleshootBtn.classList.remove('hidden'); // 🚨 失敗時顯示一鍵排錯按鈕
+          console.error('GAS 同步失敗詳情:', err);
         });
       } else {
         // 未設定同步 URL 則隱藏同步狀態欄
